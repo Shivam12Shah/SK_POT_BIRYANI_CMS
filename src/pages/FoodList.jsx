@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Layout from '../components/Layout';
 import toast from 'react-hot-toast';
-import { fetchFoods, deleteFood, updateStock } from '../store/slices/foodSlice';
+import { fetchFoods, deleteFood, updateStock, updateFoodStatus } from '../store/slices/foodSlice';
 
 const FoodList = () => {
   const dispatch = useDispatch();
@@ -18,8 +18,13 @@ const FoodList = () => {
     dispatch(deleteFood(id));
   };
 
-  const handleStockChange = (id, action) => {
-    dispatch(updateStock({ id, action }));
+
+  const handleToggleStatus = (food) => {
+    dispatch(updateFoodStatus({
+      id: food._id,
+      inStock: !food.inStock,
+      stockQty: food.stockQty // Keep existing stock
+    }));
   };
 
   return (
@@ -91,26 +96,23 @@ const FoodList = () => {
                     <div className="text-sm text-gray-900">{food.stockQty}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${food.inStock
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                      }`}>
+                    <button
+                      onClick={() => handleToggleStatus(food)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${food.inStock ? 'bg-green-600' : 'bg-gray-200'
+                        }`}
+                    >
+                      <span className="sr-only">Use setting</span>
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${food.inStock ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                      />
+                    </button>
+                    <span className={`ml-2 text-xs font-medium ${food.inStock ? 'text-green-600' : 'text-gray-500'}`}>
                       {food.inStock ? 'In Stock' : 'Out of Stock'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => handleStockChange(food._id, 'stock-in')}
-                      className="text-green-600 hover:text-green-900"
-                    >
-                      + Stock
-                    </button>
-                    <button
-                      onClick={() => handleStockChange(food._id, 'stock-out')}
-                      className="text-orange-600 hover:text-orange-900"
-                    >
-                      - Stock
-                    </button>
                     <Link
                       to={`/food/edit/${food._id}`}
                       className="text-blue-600 hover:text-blue-900"

@@ -63,6 +63,20 @@ export const updateStock = createAsyncThunk(
     }
 );
 
+export const updateFoodStatus = createAsyncThunk(
+    'food/updateStatus',
+    async ({ id, stockQty, inStock }, { rejectWithValue }) => {
+        try {
+            const response = await axios.patch(`/food/${id}/status`, { stockQty, inStock });
+            toast.success('Status updated');
+            return response.data;
+        } catch (error) {
+            toast.error('Failed to update status');
+            return rejectWithValue(error.response?.data?.message);
+        }
+    }
+);
+
 export const deleteFood = createAsyncThunk(
     'food/deleteFood',
     async (id, { rejectWithValue }) => {
@@ -108,6 +122,12 @@ const foodSlice = createSlice({
                 }
             })
             .addCase(updateStock.fulfilled, (state, action) => {
+                const index = state.items.findIndex(item => item._id === action.payload._id);
+                if (index !== -1) {
+                    state.items[index] = action.payload;
+                }
+            })
+            .addCase(updateFoodStatus.fulfilled, (state, action) => {
                 const index = state.items.findIndex(item => item._id === action.payload._id);
                 if (index !== -1) {
                     state.items[index] = action.payload;

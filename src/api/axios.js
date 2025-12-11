@@ -8,7 +8,10 @@ const instance = axios.create({
 // Request interceptor to add auth token
 instance.interceptors.request.use(
   (config) => {
-    // The token is automatically sent via cookies (httpOnly)
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {

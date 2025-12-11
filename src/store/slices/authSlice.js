@@ -24,7 +24,11 @@ export const verifyOtp = createAsyncThunk(
         try {
             const response = await axios.post('/auth/verify-otp', { phone, otp });
             toast.success('Login successful');
-            return response.data; // Expected to contain user data
+            const data = response.data;
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            }
+            return data; // Expected to contain user data and token
         } catch (error) {
             const message = error.response?.data?.message || 'Invalid OTP';
             toast.error(message);
@@ -38,8 +42,10 @@ export const logout = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             await axios.post('/auth/logout');
+            localStorage.removeItem('token');
             return null;
         } catch (error) {
+            localStorage.removeItem('token'); // Force logout on client side even if server fails
             return rejectWithValue(error.response?.data?.message || 'Logout failed');
         }
     }
@@ -103,9 +109,9 @@ const authSlice = createSlice({
             .addCase(verifyOtp.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isAuthenticated = true;
-                state.user = action.payload; // Assuming payload is the user object
+                state.user = action.payload.user || action.payload;
                 state.phone = null;
-                localStorage.setItem('user', JSON.stringify(action.payload));
+                localStorage.setItem('user', JSON.stringify(state.user));
             })
             .addCase(verifyOtp.rejected, (state, action) => {
                 state.loading = false;
@@ -116,6 +122,7 @@ const authSlice = createSlice({
                 state.user = null;
                 state.isAuthenticated = false;
                 localStorage.removeItem('user');
+                localStorage.removeItem('token');
             });
     },
 });
